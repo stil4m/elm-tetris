@@ -3,12 +3,13 @@ module State (..) where
 import Board exposing (Board)
 import Controller exposing (..)
 import Graphics.Collage exposing (..)
-import Graphics.Element exposing (Element)
+import Graphics.Element exposing (Element, flow, right, down)
 import Random exposing (Generator, Seed)
 import Signal exposing (Signal)
 import Tetromino exposing (Tetromino)
 import Time exposing (Time)
-
+import Upcoming
+import Block
 
 type alias State =
   { falling : Tetromino
@@ -18,6 +19,9 @@ type alias State =
   , time : Time
   , nextShift : Time
   , shiftDelay : Time
+  , pieceNumber : Int
+  , droppedLines : Int
+  , showNext : Bool
   }
 
 
@@ -28,7 +32,7 @@ startingShift =
 
 initialSeed : Int
 initialSeed =
-  42
+  43
 
 
 defaultState : State
@@ -50,22 +54,35 @@ defaultState =
     , time = 0
     , nextShift = Time.second / 2
     , shiftDelay = Time.second / 2
+    , pieceNumber = 1
+    , droppedLines = 0
+    , showNext = True
     }
 
 
 view : State -> Element
 view state =
   let
-    screenWidth =
-      800
+    boardWidth =
+      round (toFloat Board.cols * Block.size)
 
-    screenHeight =
-      600
+    boardHeight =
+      round (toFloat Board.rows * Block.size)
 
     boardForm =
       Board.addTetromino state.falling state.board |> Board.toForm
+
+    next =
+      Maybe.withDefault Tetromino.i (List.head state.bag)
   in
-    collage screenWidth screenHeight [ boardForm ]
+    flow
+      right
+      [ collage boardWidth boardHeight [ boardForm ]
+      , flow
+          down
+          [ Upcoming.toElement state.showNext next
+          ]
+      ]
 
 
 checkBag : State -> State
@@ -86,26 +103,26 @@ checkBag state =
 nextTetromino : State -> State
 nextTetromino state =
   let
-    state' =
-      checkBag state
-
     nextFalling =
-      List.head state'.bag
+      List.head state.bag
         |> Maybe.withDefault Tetromino.i
         |> Tetromino.shift startingShift
 
     nextBag =
-      List.drop 1 state'.bag
+      List.drop 1 state.bag
 
     ( lines, nextBoard ) =
-      Board.addTetromino state'.falling state'.board
+      Board.addTetromino state.falling state.board
         |> Board.clearLines
   in
-    { state'
-      | falling = nextFalling
-      , board = nextBoard
-      , bag = nextBag
-    }
+    checkBag
+      { state
+        | falling = nextFalling
+        , board = nextBoard
+        , bag = nextBag
+        , pieceNumber = state.pieceNumber + 1
+        , droppedLines = state.droppedLines + lines
+      }
 
 
 checkTick : State -> State
@@ -226,6 +243,8 @@ update input state =
               { state
                 | time = state.time + delta
               }
+      ToggleNext ->
+        {state | showNext = not state.showNext}
 
 
 states : Signal State

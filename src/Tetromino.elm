@@ -2,7 +2,6 @@ module Tetromino (..) where
 
 import Color exposing (Color)
 import Graphics.Collage exposing (..)
-import Graphics.Element exposing (..)
 import Block exposing (Block)
 import Random exposing (Generator)
 
@@ -210,13 +209,3 @@ bag =
     weights = Random.list 7 zeroToOne
   in
     Random.map shuffleBag weights
-
-
-main : Element
-main =
-  -- collage 400 400 [ toForm tetromino, drawPivot tetromino ]
-  Random.generate bag (Random.initialSeed 43)
-  |> fst
-  |> List.map toForm
-  |> List.map (\f -> collage 80 80 [f])
-  |> flow right

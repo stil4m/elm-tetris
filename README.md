@@ -11,3 +11,8 @@ Thanks to [jcollard](https://github.com/jcollard) a.k.a. Captain Coder for makin
 $ elm-reactor
 ```
 
+## Controls
+
+* Left, right and down to control piece.
+* Up to rotate piece.
+* `h` to hide/show next piece.
