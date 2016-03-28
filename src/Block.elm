@@ -1,7 +1,7 @@
 module Block (..) where
 
 import Color exposing (Color)
-import Graphics.Collage exposing (..)
+import Graphics.Collage exposing (square, solid, outlined, group, filled, Form)
 
 
 type alias Block =

@@ -6,11 +6,14 @@ import Signal exposing (Signal)
 import Time exposing (Time, fps)
 import Char exposing (toCode, KeyCode)
 
+
 type Direction
   = Up
   | Down
   | Right
   | Left
+  | None
+
 
 type Input
   = Rotate
@@ -18,12 +21,15 @@ type Input
   | Tick Time
   | ToggleNext
 
-arrowsToInput : { x : Int, y : Int } -> Input
-arrowsToInput { x, y } =
-  if y == 1 then
-    Rotate
-  else
-    Shift ( y, x )
+
+arrowsToInput : Direction -> Input
+arrowsToInput d =
+  case d of
+    Left -> Shift (0, -1)
+    Right -> Shift (0, 1)
+    Down -> Shift (-1, 0)
+    Up -> Rotate
+    None -> Tick 0
 
 asCommand : KeyCode -> Input
 asCommand k =
@@ -32,15 +38,38 @@ asCommand k =
   else
     Tick 0
 
+
 inputs : Signal Input
 inputs =
   let
-    ticks = Signal.map Tick (fps 6)
-    keys = Signal.map arrowsToInput arrows
-    commands = Signal.map asCommand presses
+    ticks =
+      Signal.map Tick (fps 6)
+
+    keys =
+      Signal.foldp realArrows ({x=0,y=0}, None) arrows
+      |> Signal.map snd
+      |> Signal.map arrowsToInput
+
+    commands =
+      Signal.map asCommand presses
   in
-    Signal.mergeMany [ticks,keys, commands]
+    Signal.mergeMany [ ticks, keys, commands ]
+
+
+realArrows : { x : Int, y : Int } -> ( { x : Int, y : Int }, Direction ) -> ( { x : Int, y : Int }, Direction )
+realArrows newArrows ( oldArrows, oldDirection ) =
+  if newArrows.x == -1 && oldArrows.x /= -1 then
+    ( newArrows, Left )
+  else if newArrows.x == 1 && oldArrows.x /= 1 then
+    ( newArrows, Right )
+  else if newArrows.y == 1 && oldArrows.y /= 1 then
+    ( newArrows, Up )
+  else if newArrows.y == -1 && oldArrows.y /= -1 then
+    ( newArrows, Down )
+  else
+    ( newArrows, None )
+
 
 main : Signal Element
 main =
-  Signal.map show arrows
+  Signal.map show <| Signal.foldp realArrows ( { x = 0, y = 0 }, None ) arrows

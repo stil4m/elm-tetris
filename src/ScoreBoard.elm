@@ -1,8 +1,8 @@
 module ScoreBoard (..) where
 
-import Graphics.Collage exposing (..)
-import Graphics.Element exposing (..)
-import Text exposing (..)
+import Graphics.Collage exposing (collage, rect, solid, filled, outlined, text, LineCap(Round), move)
+import Graphics.Element exposing (flow, down, Element)
+import Text exposing (fromString, monospace, bold)
 import Color
 
 

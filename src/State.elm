@@ -1,8 +1,9 @@
 module State (..) where
 
+
 import Board exposing (Board)
 import Controller exposing (..)
-import Graphics.Collage exposing (..)
+import Graphics.Collage exposing (collage)
 import Graphics.Element exposing (Element, flow, right, up, midBottom, container)
 import Random exposing (Generator, Seed)
 import Signal exposing (Signal)

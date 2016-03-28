@@ -1,7 +1,7 @@
 module Tetromino (..) where
 
 import Color exposing (Color)
-import Graphics.Collage exposing (..)
+import Graphics.Collage exposing (collage, move, group, Form, circle)
 import Block exposing (Block)
 import Random exposing (Generator)
 
@@ -106,19 +106,6 @@ o =
   , rows = 2
   , cols = 2
   }
-
-
-drawPivot : Tetromino -> Form
-drawPivot { pivot } =
-  let
-    dot =
-      circle 5 |> filled Color.black
-
-    translate =
-      move ( pivot.c * Block.size, pivot.r * Block.size )
-  in
-    translate dot
-
 
 rotateLocation : Pivot -> Float -> Location -> Location
 rotateLocation pivot angle ( row, col ) =
