@@ -1,10 +1,9 @@
 module State (..) where
 
-
 import Board exposing (Board)
 import Controller exposing (..)
 import Graphics.Collage exposing (collage)
-import Graphics.Element exposing (Element, flow, right, up, midBottom, container)
+import Graphics.Element exposing (Element, flow, right, up, midBottom, container, show)
 import Random exposing (Generator, Seed)
 import Signal exposing (Signal)
 import Tetromino exposing (Tetromino)
@@ -12,6 +11,7 @@ import Time exposing (Time)
 import Upcoming
 import Block
 import ScoreBoard exposing (Score)
+
 
 type alias State =
   { falling : Tetromino
@@ -48,16 +48,22 @@ defaultState =
 
     bag' =
       List.drop 1 bag
+
+    score =
+      ScoreBoard.initialScore
+
+    shift =
+      asShiftDelay score.level
   in
     { falling = Tetromino.shift startingShift falling
     , seed = seed
     , bag = bag'
     , board = Board.new []
     , time = 0
-    , nextShift = Time.second / 2
-    , shiftDelay = Time.second / 2
+    , score = score
+    , nextShift = shift
+    , shiftDelay = shift
     , pieceNumber = 1
-    , score = ScoreBoard.initialScore
     , showNext = True
     }
 
@@ -77,17 +83,18 @@ view state =
     next =
       Maybe.withDefault Tetromino.i (List.head state.bag)
 
-    sideBarWidth = (6 * round Block.size)
+    sideBarWidth =
+      (6 * round Block.size)
   in
     flow
       right
       [ collage boardWidth boardHeight [ boardForm ]
-      , container sideBarWidth boardHeight midBottom <|
-        flow
-          up
-          [ Upcoming.toElement state.showNext next sideBarWidth
-          , ScoreBoard.view state.score sideBarWidth
-          ]
+      , container sideBarWidth boardHeight midBottom
+          <| flow
+              up
+              [ Upcoming.toElement state.showNext next sideBarWidth
+              , ScoreBoard.view state.score sideBarWidth
+              ]
       ]
 
 
@@ -120,6 +127,9 @@ nextTetromino state =
     ( lines, nextBoard ) =
       Board.addTetromino state.falling state.board
         |> Board.clearLines
+
+    newScore =
+      ScoreBoard.addLines lines state.score
   in
     checkBag
       { state
@@ -127,8 +137,13 @@ nextTetromino state =
         , board = nextBoard
         , bag = nextBag
         , pieceNumber = state.pieceNumber + 1
-        , score = ScoreBoard.addLines lines state.score
+        , score = newScore
       }
+
+
+asShiftDelay : Int -> Float
+asShiftDelay x =
+  ((sqrt (toFloat x) * -1) / sqrt 15 + 1) * 1000
 
 
 checkTick : State -> State
@@ -151,9 +166,13 @@ checkTick state =
           { state | falling = shifted }
         else
           nextTetromino state
+
+      newShiftDelay =
+        asShiftDelay state'.score.level
     in
       { state'
         | nextShift = nextShift
+        , shiftDelay = newShiftDelay
       }
 
 
@@ -249,8 +268,9 @@ update input state =
               { state
                 | time = state.time + delta
               }
+
       ToggleNext ->
-        {state | showNext = not state.showNext}
+        { state | showNext = not state.showNext }
 
 
 states : Signal State

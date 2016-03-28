@@ -17,7 +17,7 @@ initialScore : Score
 initialScore =
   { points = 0
   , lines = 0
-  , level = 0
+  , level = 10
   }
 
 
@@ -97,7 +97,7 @@ boxWithText w label value =
   in
     collage
       w
-      65
+      50
       [ box
       , border
       , (label ++ ":")

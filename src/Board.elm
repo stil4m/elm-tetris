@@ -4,7 +4,6 @@ import Block exposing (Block)
 import Color
 import Dict exposing (Dict)
 import Graphics.Collage exposing (rect, outlined, solid, group, filled, Form, move, collage)
-import Graphics.Element exposing (Element, show, flow, down)
 import Tetromino exposing (Tetromino, Location)
 
 
@@ -183,16 +182,3 @@ tetromino =
 test : Board
 test =
   new []
-
-
-
--- main = show <| iota 10
-
-
-main : Element
-main =
-  flow
-    down
-    [ collage 600 600 [ toForm (addTetromino tetromino test) ]
-    , show <| isValid tetromino test
-    ]

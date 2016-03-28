@@ -1,6 +1,5 @@
 module Controller (..) where
 
-import Graphics.Element exposing (Element, show)
 import Keyboard exposing (arrows, presses)
 import Signal exposing (Signal)
 import Time exposing (Time, fps)
@@ -25,11 +24,21 @@ type Input
 arrowsToInput : Direction -> Input
 arrowsToInput d =
   case d of
-    Left -> Shift (0, -1)
-    Right -> Shift (0, 1)
-    Down -> Shift (-1, 0)
-    Up -> Rotate
-    None -> Tick 0
+    Left ->
+      Shift ( 0, -1 )
+
+    Right ->
+      Shift ( 0, 1 )
+
+    Down ->
+      Shift ( -1, 0 )
+
+    Up ->
+      Rotate
+
+    None ->
+      Tick 0
+
 
 asCommand : KeyCode -> Input
 asCommand k =
@@ -46,9 +55,9 @@ inputs =
       Signal.map Tick (fps 6)
 
     keys =
-      Signal.foldp realArrows ({x=0,y=0}, None) arrows
-      |> Signal.map snd
-      |> Signal.map arrowsToInput
+      Signal.foldp realArrows ( { x = 0, y = 0 }, None ) arrows
+        |> Signal.map snd
+        |> Signal.map arrowsToInput
 
     commands =
       Signal.map asCommand presses
@@ -68,8 +77,3 @@ realArrows newArrows ( oldArrows, oldDirection ) =
     ( newArrows, Down )
   else
     ( newArrows, None )
-
-
-main : Signal Element
-main =
-  Signal.map show <| Signal.foldp realArrows ( { x = 0, y = 0 }, None ) arrows
