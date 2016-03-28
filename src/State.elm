@@ -3,13 +3,14 @@ module State (..) where
 import Board exposing (Board)
 import Controller exposing (..)
 import Graphics.Collage exposing (..)
-import Graphics.Element exposing (Element, flow, right, down)
+import Graphics.Element exposing (Element, flow, right, up, midBottom, container)
 import Random exposing (Generator, Seed)
 import Signal exposing (Signal)
 import Tetromino exposing (Tetromino)
 import Time exposing (Time)
 import Upcoming
 import Block
+import ScoreBoard exposing (Score)
 
 type alias State =
   { falling : Tetromino
@@ -20,7 +21,7 @@ type alias State =
   , nextShift : Time
   , shiftDelay : Time
   , pieceNumber : Int
-  , droppedLines : Int
+  , score : Score
   , showNext : Bool
   }
 
@@ -55,7 +56,7 @@ defaultState =
     , nextShift = Time.second / 2
     , shiftDelay = Time.second / 2
     , pieceNumber = 1
-    , droppedLines = 0
+    , score = ScoreBoard.initialScore
     , showNext = True
     }
 
@@ -74,13 +75,17 @@ view state =
 
     next =
       Maybe.withDefault Tetromino.i (List.head state.bag)
+
+    sideBarWidth = (6 * round Block.size)
   in
     flow
       right
       [ collage boardWidth boardHeight [ boardForm ]
-      , flow
-          down
-          [ Upcoming.toElement state.showNext next
+      , container sideBarWidth boardHeight midBottom <|
+        flow
+          up
+          [ Upcoming.toElement state.showNext next sideBarWidth
+          , ScoreBoard.view state.score sideBarWidth
           ]
       ]
 
@@ -121,7 +126,7 @@ nextTetromino state =
         , board = nextBoard
         , bag = nextBag
         , pieceNumber = state.pieceNumber + 1
-        , droppedLines = state.droppedLines + lines
+        , score = ScoreBoard.addLines lines state.score
       }
 
 

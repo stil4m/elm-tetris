@@ -5,6 +5,13 @@ import Keyboard exposing (arrows, presses)
 import Signal exposing (Signal)
 import Time exposing (Time, fps)
 import Char exposing (toCode, KeyCode)
+
+type Direction
+  = Up
+  | Down
+  | Right
+  | Left
+
 type Input
   = Rotate
   | Shift ( Int, Int )
@@ -36,4 +43,4 @@ inputs =
 
 main : Signal Element
 main =
-  Signal.map show inputs
+  Signal.map show arrows
