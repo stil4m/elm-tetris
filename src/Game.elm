@@ -1,8 +1,10 @@
-module State (..) where
+module Game (..) where
 
 import Board exposing (Board)
 import Controller exposing (..)
-import Graphics.Collage exposing (collage)
+import Graphics.Collage exposing (collage, group, text)
+import Text exposing (fromString)
+import Color
 import Graphics.Element exposing (Element, flow, right, up, midBottom, container, show)
 import Random exposing (Generator, Seed)
 import Signal exposing (Signal)
@@ -24,6 +26,7 @@ type alias State =
   , pieceNumber : Int
   , score : Score
   , showNext : Bool
+  , paused : Bool
   }
 
 
@@ -65,6 +68,7 @@ defaultState =
     , shiftDelay = shift
     , pieceNumber = 1
     , showNext = True
+    , paused = False
     }
 
 
@@ -78,7 +82,16 @@ view state =
       round (toFloat Board.rows * Block.size)
 
     boardForm =
-      Board.addTetromino state.falling state.board |> Board.toForm
+      if state.paused then
+        group [ Board.new [] |> Board.toForm
+              , fromString "Paused"
+                |> Text.color Color.white
+                |> Text.monospace
+                |> Text.height 20
+                |> text
+              ]
+      else
+        Board.addTetromino state.falling state.board |> Board.toForm
 
     next =
       Maybe.withDefault Tetromino.i (List.head state.bag)
@@ -92,7 +105,7 @@ view state =
       , container sideBarWidth boardHeight midBottom
           <| flow
               up
-              [ Upcoming.toElement state.showNext next sideBarWidth
+              [ Upcoming.toElement (not state.paused && state.showNext) next sideBarWidth
               , ScoreBoard.view state.score sideBarWidth
               ]
       ]
@@ -231,8 +244,11 @@ update input state =
     useIfValid' =
       useIfValid state
   in
-    case input of
-      Rotate x ->
+    case ( state.paused, input ) of
+      ( _, Pause ) ->
+        { state | paused = not state.paused }
+
+      ( False, Rotate x ) ->
         let
           rotated =
             { state
@@ -256,21 +272,24 @@ update input state =
         in
           nextState''
 
-      Shift amount ->
+      ( False, Shift amount ) ->
         useIfValid'
           { state
             | falling = Tetromino.shift amount state.falling
           }
 
-      Tick delta ->
+      ( False, Tick delta ) ->
         useIfValid'
           <| checkTick
               { state
                 | time = state.time + delta
               }
 
-      ToggleNext ->
+      ( False, ToggleNext ) ->
         { state | showNext = not state.showNext }
+
+      _ ->
+        state
 
 
 states : Signal State
