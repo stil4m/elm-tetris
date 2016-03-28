@@ -15,7 +15,7 @@ type Direction
 
 
 type Input
-  = Rotate
+  = Rotate Bool
   | Shift ( Int, Int )
   | Tick Time
   | ToggleNext
@@ -34,7 +34,7 @@ arrowsToInput d =
       Shift ( -1, 0 )
 
     Up ->
-      Rotate
+      Tick 0
 
     None ->
       Tick 0
@@ -44,6 +44,10 @@ asCommand : KeyCode -> Input
 asCommand k =
   if k == (toCode 'h') then
     ToggleNext
+  else if k == (toCode 'n') then
+    Rotate False
+  else if k == (toCode 'm') then
+    Rotate True
   else
     Tick 0
 

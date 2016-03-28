@@ -107,6 +107,7 @@ o =
   , cols = 2
   }
 
+
 rotateLocation : Pivot -> Float -> Location -> Location
 rotateLocation pivot angle ( row, col ) =
   let
@@ -130,11 +131,17 @@ rotateLocation pivot angle ( row, col ) =
     )
 
 
-rotate : Tetromino -> Tetromino
-rotate tetromino =
+rotate : Bool -> Tetromino -> Tetromino
+rotate clockwise tetromino =
   let
+    d =
+      if clockwise then
+        90
+      else
+        -90
+
     rotateHelper =
-      rotateLocation tetromino.pivot (degrees 90)
+      rotateLocation tetromino.pivot (degrees d)
 
     newShape =
       List.map rotateHelper tetromino.shape
@@ -190,9 +197,11 @@ shuffleBag weights =
   in
     List.map snd sorted
 
+
 bag : Generator (List Tetromino)
 bag =
   let
-    weights = Random.list 7 zeroToOne
+    weights =
+      Random.list 7 zeroToOne
   in
     Random.map shuffleBag weights

@@ -232,11 +232,11 @@ update input state =
       useIfValid state
   in
     case input of
-      Rotate ->
+      Rotate x ->
         let
           rotated =
             { state
-              | falling = Tetromino.rotate state.falling
+              | falling = Tetromino.rotate x state.falling
             }
 
           nextState =
