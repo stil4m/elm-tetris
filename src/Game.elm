@@ -104,7 +104,6 @@ view state =
               [ Upcoming.toElement (not state.paused && state.showNext) next sideBarWidth
               , ScoreBoard.view state.score sideBarWidth
               ]
-      , show (toString state.gameOver)
       ]
 
 
