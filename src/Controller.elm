@@ -19,6 +19,7 @@ type Input
   | Shift ( Int, Int )
   | Tick Time
   | ToggleNext
+  | Pause
 
 
 arrowsToInput : Direction -> Input
@@ -48,6 +49,8 @@ asCommand k =
     Rotate False
   else if k == (toCode 'm') then
     Rotate True
+  else if k == (toCode 'p') then
+      Pause
   else
     Tick 0
 
@@ -56,7 +59,7 @@ inputs : Signal Input
 inputs =
   let
     ticks =
-      Signal.map Tick (fps 6)
+      Signal.map Tick (fps 30)
 
     keys =
       Signal.foldp realArrows ( { x = 0, y = 0 }, None ) arrows

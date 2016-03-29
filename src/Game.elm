@@ -1,8 +1,8 @@
-module State (..) where
+module Game (..) where
 
 import Board exposing (Board)
 import Controller exposing (..)
-import Graphics.Collage exposing (collage)
+import Graphics.Collage exposing (collage, group, text)
 import Graphics.Element exposing (Element, flow, right, up, midBottom, container, show)
 import Random exposing (Generator, Seed)
 import Signal exposing (Signal)
@@ -16,6 +16,7 @@ import ScoreBoard exposing (Score)
 type alias State =
   { falling : Tetromino
   , seed : Seed
+  , gameOver : Bool
   , bag : List Tetromino
   , board : Board
   , time : Time
@@ -24,6 +25,7 @@ type alias State =
   , pieceNumber : Int
   , score : Score
   , showNext : Bool
+  , paused : Bool
   }
 
 
@@ -57,6 +59,7 @@ defaultState =
   in
     { falling = Tetromino.shift startingShift falling
     , seed = seed
+    , gameOver = False
     , bag = bag'
     , board = Board.new []
     , time = 0
@@ -65,6 +68,7 @@ defaultState =
     , shiftDelay = shift
     , pieceNumber = 1
     , showNext = True
+    , paused = False
     }
 
 
@@ -78,7 +82,12 @@ view state =
       round (toFloat Board.rows * Block.size)
 
     boardForm =
-      Board.addTetromino state.falling state.board |> Board.toForm
+      if state.paused then
+        Board.pausedForm
+      else if state.gameOver then
+        Board.gameOverForm state.board
+      else
+        Board.addTetromino state.falling state.board |> Board.toForm
 
     next =
       Maybe.withDefault Tetromino.i (List.head state.bag)
@@ -92,9 +101,10 @@ view state =
       , container sideBarWidth boardHeight midBottom
           <| flow
               up
-              [ Upcoming.toElement state.showNext next sideBarWidth
+              [ Upcoming.toElement (not state.paused && state.showNext) next sideBarWidth
               , ScoreBoard.view state.score sideBarWidth
               ]
+      , show (toString state.gameOver)
       ]
 
 
@@ -227,11 +237,35 @@ floorKick current nextState =
 
 update : Input -> State -> State
 update input state =
+  if state.gameOver then
+    updateGameOver input state
+  else if state.paused then
+    updatePausedGame input state
+  else
+    updateActiveGame input state
+
+updateGameOver : Input -> State -> State
+updateGameOver input state =
+  state
+
+updatePausedGame : Input -> State -> State
+updatePausedGame input state =
+  case input of
+    Pause ->
+      { state | paused = not state.paused }
+    _ ->
+      state
+
+updateActiveGame : Input -> State -> State
+updateActiveGame input state =
   let
     useIfValid' =
       useIfValid state
   in
     case input of
+      Pause ->
+        { state | paused = not state.paused }
+
       Rotate x ->
         let
           rotated =
@@ -263,11 +297,17 @@ update input state =
           }
 
       Tick delta ->
-        useIfValid'
-          <| checkTick
+        let
+          newState =
+            checkTick
               { state
                 | time = state.time + delta
               }
+
+          valid =
+            Board.isValid newState.falling newState.board
+        in
+          { newState | gameOver = not valid }
 
       ToggleNext ->
         { state | showNext = not state.showNext }
