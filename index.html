@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html><head><meta charset="UTF-8"><title>State</title><style>html,head,body { padding:0; margin:0; }
+<html><head><meta charset="UTF-8"><title>Game</title><style>html,head,body { padding:0; margin:0; }
 body { font-family: calibri, helvetica, arial, sans-serif; }</style><script type="text/javascript">var Elm = Elm || { Native: {} };Elm.Native.Basics = {};
 Elm.Native.Basics.make = function(localRuntime) {
 	localRuntime.Native = localRuntime.Native || {};
@@ -7134,7 +7134,8 @@ Elm.Board.make = function (_elm) {
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
-   $Tetromino = Elm.Tetromino.make(_elm);
+   $Tetromino = Elm.Tetromino.make(_elm),
+   $Text = Elm.Text.make(_elm);
    var _op = {};
    var tetromino = A2($Tetromino.shift,{ctor: "_Tuple2",_0: 5,_1: 10},$Tetromino.j);
    var isIntersecting = F2(function (_p0,board) {
@@ -7173,6 +7174,15 @@ Elm.Board.make = function (_elm) {
       return $Graphics$Collage.group(_U.list([form,blockForm]));
    });
    var toForm = function (board) {    return A3($Dict.foldl,addBlock,background,board);};
+   var gameOverForm = function (board) {
+      return $Graphics$Collage.group(_U.list([toForm(board)
+                                             ,A2($Graphics$Collage.filled,$Color.gray,A2($Graphics$Collage.rect,10 * $Block.size,30))
+                                             ,A2($Graphics$Collage.move,
+                                             {ctor: "_Tuple2",_0: 0,_1: 4},
+                                             $Graphics$Collage.text(A2($Text.height,
+                                             20,
+                                             $Text.monospace(A2($Text.color,$Color.white,$Text.fromString("Game Over"))))))]));
+   };
    var checkRow = F2(function (row,board) {
       var blocks = A2($Dict.filter,F2(function (_p9,_p8) {    var _p10 = _p9;return _U.eq(_p10._0,row);}),board);
       return _U.eq($Dict.size(blocks),cols);
@@ -7206,6 +7216,10 @@ Elm.Board.make = function (_elm) {
    };
    var isValid = F2(function (tetromino,board) {    return inBounds(tetromino) && $Basics.not(A2(isIntersecting,tetromino,board));});
    var $new = $Dict.fromList;
+   var pausedForm = $Graphics$Collage.group(_U.list([toForm($new(_U.list([])))
+                                                    ,$Graphics$Collage.text(A2($Text.height,
+                                                    20,
+                                                    $Text.monospace(A2($Text.color,$Color.white,$Text.fromString("Paused")))))]));
    var testBoard = $new(_U.list([{ctor: "_Tuple2",_0: {ctor: "_Tuple2",_0: 0,_1: 0},_1: $Block.Block($Color.blue)}
                                 ,{ctor: "_Tuple2",_0: {ctor: "_Tuple2",_0: 0,_1: 1},_1: $Block.Block($Color.yellow)}
                                 ,{ctor: "_Tuple2",_0: {ctor: "_Tuple2",_0: 1,_1: 0},_1: $Block.Block($Color.red)}
@@ -7231,6 +7245,8 @@ Elm.Board.make = function (_elm) {
                               ,background: background
                               ,addBlock: addBlock
                               ,toForm: toForm
+                              ,gameOverForm: gameOverForm
+                              ,pausedForm: pausedForm
                               ,testBoard: testBoard
                               ,cumulativeSum: cumulativeSum
                               ,iota: iota
@@ -7260,6 +7276,7 @@ Elm.Controller.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $Time = Elm.Time.make(_elm);
    var _op = {};
+   var Pause = {ctor: "Pause"};
    var ToggleNext = {ctor: "ToggleNext"};
    var Tick = function (a) {    return {ctor: "Tick",_0: a};};
    var Shift = function (a) {    return {ctor: "Shift",_0: a};};
@@ -7275,7 +7292,7 @@ Elm.Controller.make = function (_elm) {
    var Rotate = function (a) {    return {ctor: "Rotate",_0: a};};
    var asCommand = function (k) {
       return _U.eq(k,$Char.toCode(_U.chr("h"))) ? ToggleNext : _U.eq(k,$Char.toCode(_U.chr("n"))) ? Rotate(false) : _U.eq(k,
-      $Char.toCode(_U.chr("m"))) ? Rotate(true) : Tick(0);
+      $Char.toCode(_U.chr("m"))) ? Rotate(true) : _U.eq(k,$Char.toCode(_U.chr("p"))) ? Pause : Tick(0);
    };
    var None = {ctor: "None"};
    var Left = {ctor: "Left"};
@@ -7299,7 +7316,7 @@ Elm.Controller.make = function (_elm) {
       var keys = A2($Signal.map,
       arrowsToInput,
       A2($Signal.map,$Basics.snd,A3($Signal.foldp,realArrows,{ctor: "_Tuple2",_0: {x: 0,y: 0},_1: None},$Keyboard.arrows)));
-      var ticks = A2($Signal.map,Tick,$Time.fps(6));
+      var ticks = A2($Signal.map,Tick,$Time.fps(30));
       return $Signal.mergeMany(_U.list([ticks,keys,commands]));
    }();
    return _elm.Controller.values = {_op: _op
@@ -7312,10 +7329,43 @@ Elm.Controller.make = function (_elm) {
                                    ,Shift: Shift
                                    ,Tick: Tick
                                    ,ToggleNext: ToggleNext
+                                   ,Pause: Pause
                                    ,arrowsToInput: arrowsToInput
                                    ,asCommand: asCommand
                                    ,inputs: inputs
                                    ,realArrows: realArrows};
+};Elm.Upcoming = Elm.Upcoming || {};
+Elm.Upcoming.make = function (_elm) {
+   "use strict";
+   _elm.Upcoming = _elm.Upcoming || {};
+   if (_elm.Upcoming.values) return _elm.Upcoming.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Block = Elm.Block.make(_elm),
+   $Color = Elm.Color.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Tetromino = Elm.Tetromino.make(_elm);
+   var _op = {};
+   var toElement = F3(function (showNext,tetromino,width) {
+      var border = $Graphics$Collage.solid($Color.black);
+      var border$ = _U.update(border,{width: 3.0,cap: $Graphics$Collage.Round});
+      var dim = 6 * $Basics.round($Block.size) - 10;
+      var box = $Graphics$Collage.square($Basics.toFloat(dim));
+      var forms = _U.list([A2($Graphics$Collage.filled,$Color.white,box),A2($Graphics$Collage.outlined,border$,box)]);
+      var forms$ = showNext ? A2($Basics._op["++"],
+      forms,
+      _U.list([A2($Graphics$Collage.move,
+      {ctor: "_Tuple2",_0: (0 - tetromino.pivot.c) * $Block.size,_1: (0 - tetromino.pivot.r) * $Block.size},
+      $Tetromino.toForm(tetromino))])) : forms;
+      return A3($Graphics$Collage.collage,width,width,forms$);
+   });
+   return _elm.Upcoming.values = {_op: _op,toElement: toElement};
 };Elm.ScoreBoard = Elm.ScoreBoard || {};
 Elm.ScoreBoard.make = function (_elm) {
    "use strict";
@@ -7383,43 +7433,11 @@ Elm.ScoreBoard.make = function (_elm) {
                                    ,factorForLines: factorForLines
                                    ,view: view
                                    ,boxWithText: boxWithText};
-};Elm.Upcoming = Elm.Upcoming || {};
-Elm.Upcoming.make = function (_elm) {
+};Elm.Game = Elm.Game || {};
+Elm.Game.make = function (_elm) {
    "use strict";
-   _elm.Upcoming = _elm.Upcoming || {};
-   if (_elm.Upcoming.values) return _elm.Upcoming.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Block = Elm.Block.make(_elm),
-   $Color = Elm.Color.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
-   $Graphics$Element = Elm.Graphics.Element.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $Tetromino = Elm.Tetromino.make(_elm);
-   var _op = {};
-   var toElement = F3(function (showNext,tetromino,width) {
-      var border = $Graphics$Collage.solid($Color.black);
-      var border$ = _U.update(border,{width: 3.0,cap: $Graphics$Collage.Round});
-      var dim = 6 * $Basics.round($Block.size) - 10;
-      var box = $Graphics$Collage.square($Basics.toFloat(dim));
-      var forms = _U.list([A2($Graphics$Collage.filled,$Color.white,box),A2($Graphics$Collage.outlined,border$,box)]);
-      var forms$ = showNext ? A2($Basics._op["++"],
-      forms,
-      _U.list([A2($Graphics$Collage.move,
-      {ctor: "_Tuple2",_0: (0 - tetromino.pivot.c) * $Block.size,_1: (0 - tetromino.pivot.r) * $Block.size},
-      $Tetromino.toForm(tetromino))])) : forms;
-      return A3($Graphics$Collage.collage,width,width,forms$);
-   });
-   return _elm.Upcoming.values = {_op: _op,toElement: toElement};
-};Elm.State = Elm.State || {};
-Elm.State.make = function (_elm) {
-   "use strict";
-   _elm.State = _elm.State || {};
-   if (_elm.State.values) return _elm.State.values;
+   _elm.Game = _elm.Game || {};
+   if (_elm.Game.values) return _elm.Game.values;
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Block = Elm.Block.make(_elm),
@@ -7438,18 +7456,27 @@ Elm.State.make = function (_elm) {
    $Time = Elm.Time.make(_elm),
    $Upcoming = Elm.Upcoming.make(_elm);
    var _op = {};
+   var updatePausedGame = F2(function (input,state) {
+      var _p0 = input;
+      if (_p0.ctor === "Pause") {
+            return _U.update(state,{paused: $Basics.not(state.paused)});
+         } else {
+            return state;
+         }
+   });
+   var updateGameOver = F2(function (input,state) {    return state;});
    var tryKicks = F3(function (shifts,current,nextState) {
       tryKicks: while (true) {
-         var _p0 = shifts;
-         if (_p0.ctor === "[]") {
+         var _p1 = shifts;
+         if (_p1.ctor === "[]") {
                return current;
             } else {
-               var shifted = A2($Tetromino.shift,_p0._0,nextState.falling);
+               var shifted = A2($Tetromino.shift,_p1._0,nextState.falling);
                if (A2($Board.isValid,shifted,nextState.board)) return _U.update(nextState,{falling: shifted}); else {
-                     var _v1 = _p0._1,_v2 = current,_v3 = nextState;
-                     shifts = _v1;
-                     current = _v2;
-                     nextState = _v3;
+                     var _v2 = _p1._1,_v3 = current,_v4 = nextState;
+                     shifts = _v2;
+                     current = _v3;
+                     nextState = _v4;
                      continue tryKicks;
                   }
             }
@@ -7469,16 +7496,18 @@ Elm.State.make = function (_elm) {
    var asShiftDelay = function (x) {    return ($Basics.sqrt($Basics.toFloat(x)) * -1 / $Basics.sqrt(15) + 1) * 1000;};
    var checkBag = function (state) {
       if ($Basics.not($List.isEmpty(state.bag))) return state; else {
-            var _p1 = A2($Random.generate,$Tetromino.bag,state.seed);
-            var bag = _p1._0;
-            var seed = _p1._1;
+            var _p2 = A2($Random.generate,$Tetromino.bag,state.seed);
+            var bag = _p2._0;
+            var seed = _p2._1;
             return _U.update(state,{bag: bag,seed: seed});
          }
    };
    var view = function (state) {
       var sideBarWidth = 6 * $Basics.round($Block.size);
       var next = A2($Maybe.withDefault,$Tetromino.i,$List.head(state.bag));
-      var boardForm = $Board.toForm(A2($Board.addTetromino,state.falling,state.board));
+      var boardForm = state.paused ? $Board.pausedForm : state.gameOver ? $Board.gameOverForm(state.board) : $Board.toForm(A2($Board.addTetromino,
+      state.falling,
+      state.board));
       var boardHeight = $Basics.round($Basics.toFloat($Board.rows) * $Block.size);
       var boardWidth = $Basics.round($Basics.toFloat($Board.cols) * $Block.size);
       return A2($Graphics$Element.flow,
@@ -7490,20 +7519,22 @@ Elm.State.make = function (_elm) {
               $Graphics$Element.midBottom,
               A2($Graphics$Element.flow,
               $Graphics$Element.up,
-              _U.list([A3($Upcoming.toElement,state.showNext,next,sideBarWidth),A2($ScoreBoard.view,state.score,sideBarWidth)])))]));
+              _U.list([A3($Upcoming.toElement,$Basics.not(state.paused) && state.showNext,next,sideBarWidth),A2($ScoreBoard.view,state.score,sideBarWidth)])))
+              ,$Graphics$Element.show($Basics.toString(state.gameOver))]));
    };
    var initialSeed = 43;
    var startingShift = {ctor: "_Tuple2",_0: 20,_1: 5};
    var defaultState = function () {
       var score = $ScoreBoard.initialScore;
       var shift = asShiftDelay(score.level);
-      var _p2 = A2($Random.generate,$Tetromino.bag,$Random.initialSeed(initialSeed));
-      var bag = _p2._0;
-      var seed = _p2._1;
+      var _p3 = A2($Random.generate,$Tetromino.bag,$Random.initialSeed(initialSeed));
+      var bag = _p3._0;
+      var seed = _p3._1;
       var falling = A2($Maybe.withDefault,$Tetromino.i,$List.head(bag));
       var bag$ = A2($List.drop,1,bag);
       return {falling: A2($Tetromino.shift,startingShift,falling)
              ,seed: seed
+             ,gameOver: false
              ,bag: bag$
              ,board: $Board.$new(_U.list([]))
              ,time: 0
@@ -7511,12 +7542,13 @@ Elm.State.make = function (_elm) {
              ,nextShift: shift
              ,shiftDelay: shift
              ,pieceNumber: 1
-             ,showNext: true};
+             ,showNext: true
+             ,paused: false};
    }();
    var nextTetromino = function (state) {
-      var _p3 = $Board.clearLines(A2($Board.addTetromino,state.falling,state.board));
-      var lines = _p3._0;
-      var nextBoard = _p3._1;
+      var _p4 = $Board.clearLines(A2($Board.addTetromino,state.falling,state.board));
+      var lines = _p4._0;
+      var nextBoard = _p4._1;
       var newScore = A2($ScoreBoard.addLines,lines,state.score);
       var nextBag = A2($List.drop,1,state.bag);
       var nextFalling = A2($Tetromino.shift,startingShift,A2($Maybe.withDefault,$Tetromino.i,$List.head(state.bag)));
@@ -7532,18 +7564,24 @@ Elm.State.make = function (_elm) {
             return _U.update(state$,{nextShift: nextShift,shiftDelay: newShiftDelay});
          }
    };
-   var update = F2(function (input,state) {
+   var updateActiveGame = F2(function (input,state) {
       var useIfValid$ = useIfValid(state);
-      var _p4 = input;
-      switch (_p4.ctor)
-      {case "Rotate": var rotated = _U.update(state,{falling: A2($Tetromino.rotate,_p4._0,state.falling)});
+      var _p5 = input;
+      switch (_p5.ctor)
+      {case "Pause": return _U.update(state,{paused: $Basics.not(state.paused)});
+         case "Rotate": var rotated = _U.update(state,{falling: A2($Tetromino.rotate,_p5._0,state.falling)});
            var nextState = useIfValid$(rotated);
            var nextState$ = _U.eq(nextState,state) ? A2(wallKick,state,rotated) : nextState;
            var nextState$$ = _U.eq(nextState$,state) ? A2(floorKick,state,rotated) : nextState$;
            return nextState$$;
-         case "Shift": return useIfValid$(_U.update(state,{falling: A2($Tetromino.shift,_p4._0,state.falling)}));
-         case "Tick": return useIfValid$(checkTick(_U.update(state,{time: state.time + _p4._0})));
+         case "Shift": return useIfValid$(_U.update(state,{falling: A2($Tetromino.shift,_p5._0,state.falling)}));
+         case "Tick": var newState = checkTick(_U.update(state,{time: state.time + _p5._0}));
+           var valid = A2($Board.isValid,newState.falling,newState.board);
+           return _U.update(newState,{gameOver: $Basics.not(valid)});
          default: return _U.update(state,{showNext: $Basics.not(state.showNext)});}
+   });
+   var update = F2(function (input,state) {
+      return state.gameOver ? A2(updateGameOver,input,state) : state.paused ? A2(updatePausedGame,input,state) : A2(updateActiveGame,input,state);
    });
    var states = A3($Signal.foldp,update,defaultState,$Controller.inputs);
    var main = A2($Signal.map,view,states);
@@ -7557,7 +7595,22 @@ Elm.State.make = function (_elm) {
                         return function (h) {
                            return function (i) {
                               return function (j) {
-                                 return {falling: a,seed: b,bag: c,board: d,time: e,nextShift: f,shiftDelay: g,pieceNumber: h,score: i,showNext: j};
+                                 return function (k) {
+                                    return function (l) {
+                                       return {falling: a
+                                              ,seed: b
+                                              ,gameOver: c
+                                              ,bag: d
+                                              ,board: e
+                                              ,time: f
+                                              ,nextShift: g
+                                              ,shiftDelay: h
+                                              ,pieceNumber: i
+                                              ,score: j
+                                              ,showNext: k
+                                              ,paused: l};
+                                    };
+                                 };
                               };
                            };
                         };
@@ -7568,21 +7621,24 @@ Elm.State.make = function (_elm) {
          };
       };
    };
-   return _elm.State.values = {_op: _op
-                              ,State: State
-                              ,startingShift: startingShift
-                              ,initialSeed: initialSeed
-                              ,defaultState: defaultState
-                              ,view: view
-                              ,checkBag: checkBag
-                              ,nextTetromino: nextTetromino
-                              ,asShiftDelay: asShiftDelay
-                              ,checkTick: checkTick
-                              ,useIfValid: useIfValid
-                              ,tryKicks: tryKicks
-                              ,wallKick: wallKick
-                              ,floorKick: floorKick
-                              ,update: update
-                              ,states: states
-                              ,main: main};
-};</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.State)</script></body></html>
+   return _elm.Game.values = {_op: _op
+                             ,State: State
+                             ,startingShift: startingShift
+                             ,initialSeed: initialSeed
+                             ,defaultState: defaultState
+                             ,view: view
+                             ,checkBag: checkBag
+                             ,nextTetromino: nextTetromino
+                             ,asShiftDelay: asShiftDelay
+                             ,checkTick: checkTick
+                             ,useIfValid: useIfValid
+                             ,tryKicks: tryKicks
+                             ,wallKick: wallKick
+                             ,floorKick: floorKick
+                             ,update: update
+                             ,updateGameOver: updateGameOver
+                             ,updatePausedGame: updatePausedGame
+                             ,updateActiveGame: updateActiveGame
+                             ,states: states
+                             ,main: main};
+};</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Game)</script></body></html>
