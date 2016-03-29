@@ -3,8 +3,9 @@ module Board (..) where
 import Block exposing (Block)
 import Color
 import Dict exposing (Dict)
-import Graphics.Collage exposing (rect, outlined, solid, group, filled, Form, move, collage)
+import Graphics.Collage exposing (rect, outlined, solid, group, filled, Form, move, collage, text)
 import Tetromino exposing (Tetromino, Location)
+import Text
 
 
 type alias Board =
@@ -62,6 +63,32 @@ addBlock ( row, col ) block form =
 toForm : Board -> Form
 toForm board =
   Dict.foldl addBlock background board
+
+
+gameOverForm : Board -> Form
+gameOverForm board =
+  group
+    [ board |> toForm
+    , filled Color.gray (rect (10 * Block.size) 30)
+    , Text.fromString "Game Over"
+        |> Text.color Color.white
+        |> Text.monospace
+        |> Text.height 20
+        |> text
+        |> move (0, 4)
+    ]
+
+
+pausedForm : Form
+pausedForm =
+  group
+    [ new [] |> toForm
+    , Text.fromString "Paused"
+        |> Text.color Color.white
+        |> Text.monospace
+        |> Text.height 20
+        |> text
+    ]
 
 
 testBoard : Board

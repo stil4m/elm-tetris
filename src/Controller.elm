@@ -59,7 +59,7 @@ inputs : Signal Input
 inputs =
   let
     ticks =
-      Signal.map Tick (fps 6)
+      Signal.map Tick (fps 30)
 
     keys =
       Signal.foldp realArrows ( { x = 0, y = 0 }, None ) arrows
