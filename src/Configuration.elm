@@ -66,7 +66,14 @@ view configuration =
     ( w, h ) =
       sizeOf item
   in
-    collage w h [ toForm item ]
+    container
+      400
+      500
+      midTop
+      (flow down [ item
+                , fromString "Use arrows to set the initial level\nand press enter to start the game" |> leftAligned
+                ])
+
 
 
 configItem : Bool -> String -> String -> Element

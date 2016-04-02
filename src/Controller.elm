@@ -5,7 +5,6 @@ import Signal exposing (Signal)
 import Time exposing (Time, fps)
 import Char exposing (KeyCode, toCode)
 
-
 type Direction
   = Up
   | Down
@@ -45,7 +44,7 @@ inputs =
       |> Signal.map (iff Enter (Frame 0))
 
   in
-    Signal.mergeMany [ ticks, keys, commands, enters ]
+    Signal.mergeMany [ ticks, keys, commands, enters]
 
 
 realArrows : { x : Int, y : Int } -> ( { x : Int, y : Int }, Direction ) -> ( { x : Int, y : Int }, Direction )
