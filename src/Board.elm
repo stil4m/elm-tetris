@@ -69,13 +69,19 @@ gameOverForm : Board -> Form
 gameOverForm board =
   group
     [ board |> toForm
-    , filled Color.gray (rect (10 * Block.size) 30)
+    , filled Color.gray (rect (10 * Block.size) 40)
     , Text.fromString "Game Over"
         |> Text.color Color.white
         |> Text.monospace
         |> Text.height 20
         |> text
-        |> move (0, 4)
+        |> move (0, 10)
+    , Text.fromString "Press enter to continue"
+        |> Text.color Color.white
+        |> Text.monospace
+        |> Text.height 12
+        |> text
+        |> move (0, -6)
     ]
 
 
