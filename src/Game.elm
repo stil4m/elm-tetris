@@ -1,11 +1,10 @@
 module Game (..) where
 
 import Board exposing (Board)
-import Controller exposing (..)
+import GameController exposing (..)
 import Graphics.Collage exposing (collage, group, text)
 import Graphics.Element exposing (Element, flow, right, up, midBottom, container, show)
 import Random exposing (Generator, Seed)
-import Signal exposing (Signal)
 import Tetromino exposing (Tetromino)
 import Time exposing (Time)
 import Upcoming
@@ -13,7 +12,7 @@ import Block
 import ScoreBoard exposing (Score)
 
 
-type alias State =
+type alias Game =
   { falling : Tetromino
   , seed : Seed
   , gameOver : Bool
@@ -39,8 +38,8 @@ initialSeed =
   43
 
 
-defaultState : State
-defaultState =
+newGame : Int ->  Game
+newGame intitialLevel =
   let
     ( bag, seed ) =
       Random.generate Tetromino.bag (Random.initialSeed initialSeed)
@@ -52,7 +51,7 @@ defaultState =
       List.drop 1 bag
 
     score =
-      ScoreBoard.initialScore
+      ScoreBoard.newScore intitialLevel
 
     shift =
       asShiftDelay score.level
@@ -72,7 +71,7 @@ defaultState =
     }
 
 
-view : State -> Element
+view : Game -> Element
 view state =
   let
     boardWidth =
@@ -107,7 +106,7 @@ view state =
       ]
 
 
-checkBag : State -> State
+checkBag : Game -> Game
 checkBag state =
   if not (List.isEmpty state.bag) then
     state
@@ -122,7 +121,7 @@ checkBag state =
       }
 
 
-nextTetromino : State -> State
+nextTetromino : Game -> Game
 nextTetromino state =
   let
     nextFalling =
@@ -155,7 +154,7 @@ asShiftDelay x =
   ((sqrt (toFloat x) * -1) / sqrt 15 + 1) * 1000
 
 
-checkTick : State -> State
+checkTick : Game -> Game
 checkTick state =
   if state.time < state.nextShift then
     state
@@ -185,7 +184,7 @@ checkTick state =
       }
 
 
-useIfValid : State -> State -> State
+useIfValid : Game -> Game -> Game
 useIfValid current new =
   if Board.isValid new.falling new.board then
     new
@@ -193,7 +192,7 @@ useIfValid current new =
     current
 
 
-tryKicks : List ( Int, Int ) -> State -> State -> State
+tryKicks : List ( Int, Int ) -> Game -> Game -> Game
 tryKicks shifts current nextState =
   case shifts of
     [] ->
@@ -210,7 +209,7 @@ tryKicks shifts current nextState =
           tryKicks rest current nextState
 
 
-wallKick : State -> State -> State
+wallKick : Game -> Game -> Game
 wallKick current nextState =
   let
     range =
@@ -222,7 +221,7 @@ wallKick current nextState =
     tryKicks shifts current nextState
 
 
-floorKick : State -> State -> State
+floorKick : Game -> Game -> Game
 floorKick current nextState =
   let
     range =
@@ -234,7 +233,7 @@ floorKick current nextState =
     tryKicks shifts current nextState
 
 
-update : Input -> State -> State
+update : GameInput -> Game -> Game
 update input state =
   if state.gameOver then
     updateGameOver input state
@@ -243,11 +242,11 @@ update input state =
   else
     updateActiveGame input state
 
-updateGameOver : Input -> State -> State
+updateGameOver : GameInput -> Game -> Game
 updateGameOver input state =
   state
 
-updatePausedGame : Input -> State -> State
+updatePausedGame : GameInput -> Game -> Game
 updatePausedGame input state =
   case input of
     Pause ->
@@ -255,7 +254,7 @@ updatePausedGame input state =
     _ ->
       state
 
-updateActiveGame : Input -> State -> State
+updateActiveGame : GameInput -> Game -> Game
 updateActiveGame input state =
   let
     useIfValid' =
@@ -310,13 +309,3 @@ updateActiveGame input state =
 
       ToggleNext ->
         { state | showNext = not state.showNext }
-
-
-states : Signal State
-states =
-  Signal.foldp update defaultState inputs
-
-
-main : Signal Element
-main =
-  Signal.map view states

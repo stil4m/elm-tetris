@@ -3,7 +3,7 @@ module Controller (..) where
 import Keyboard exposing (arrows, presses)
 import Signal exposing (Signal)
 import Time exposing (Time, fps)
-import Char exposing (toCode, KeyCode)
+import Char exposing (KeyCode, toCode)
 
 
 type Direction
@@ -15,61 +15,37 @@ type Direction
 
 
 type Input
-  = Rotate Bool
-  | Shift ( Int, Int )
-  | Tick Time
-  | ToggleNext
-  | Pause
+  = Direction Direction
+  | Key KeyCode
+  | Frame Time
+  | Enter
 
 
-arrowsToInput : Direction -> Input
-arrowsToInput d =
-  case d of
-    Left ->
-      Shift ( 0, -1 )
-
-    Right ->
-      Shift ( 0, 1 )
-
-    Down ->
-      Shift ( -1, 0 )
-
-    Up ->
-      Tick 0
-
-    None ->
-      Tick 0
-
-
-asCommand : KeyCode -> Input
-asCommand k =
-  if k == (toCode 'h') then
-    ToggleNext
-  else if k == (toCode 'n') then
-    Rotate False
-  else if k == (toCode 'm') then
-    Rotate True
-  else if k == (toCode 'p') then
-      Pause
-  else
-    Tick 0
-
-
+iff : a -> a -> (Bool -> a)
+iff x y = (\a -> if a then x else y)
 inputs : Signal Input
 inputs =
   let
     ticks =
-      Signal.map Tick (fps 30)
+      Signal.map Frame (fps 30)
 
     keys =
-      Signal.foldp realArrows ( { x = 0, y = 0 }, None ) arrows
+      arrows
+        |> Signal.foldp realArrows ( { x = 0, y = 0 }, None )
         |> Signal.map snd
-        |> Signal.map arrowsToInput
+        |> Signal.map Direction
 
     commands =
-      Signal.map asCommand presses
+      presses
+        |> Signal.filter (\x -> x /= 13) 0
+        |> Signal.map Key
+
+    enters =
+      Keyboard.enter
+      |> Signal.map (iff Enter (Frame 0))
+
   in
-    Signal.mergeMany [ ticks, keys, commands ]
+    Signal.mergeMany [ ticks, keys, commands, enters ]
 
 
 realArrows : { x : Int, y : Int } -> ( { x : Int, y : Int }, Direction ) -> ( { x : Int, y : Int }, Direction )

@@ -13,11 +13,11 @@ type alias Score =
   }
 
 
-initialScore : Score
-initialScore =
+newScore : Int -> Score
+newScore level =
   { points = 0
   , lines = 0
-  , level = 0
+  , level = level
   }
 
 
