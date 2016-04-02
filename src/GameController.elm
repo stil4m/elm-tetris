@@ -10,6 +10,7 @@ type GameInput
   | Tick Time
   | ToggleNext
   | Pause
+  | NoOp
 
 inputToGameInput : Input -> GameInput
 inputToGameInput i =
@@ -20,6 +21,8 @@ inputToGameInput i =
       keyToGameInput k
     Frame f ->
       Tick f
+    Enter ->
+      NoOp
 
 
 keyToGameInput : KeyCode -> GameInput
@@ -33,7 +36,7 @@ keyToGameInput k =
     else if k == (toCode 'p') then
         Pause
     else
-      Tick 0
+      NoOp
 
 arrowsToGameInput : Direction -> GameInput
 arrowsToGameInput d =
@@ -51,4 +54,4 @@ arrowsToGameInput d =
       Tick 0
 
     None ->
-      Tick 0
+      NoOp

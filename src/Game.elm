@@ -261,6 +261,8 @@ updateActiveGame input state =
       useIfValid state
   in
     case input of
+      NoOp ->
+        state
       Pause ->
         { state | paused = not state.paused }
 
