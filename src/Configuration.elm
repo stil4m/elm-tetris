@@ -71,18 +71,29 @@ view configuration =
     ( w, h ) =
       sizeOf item
   in
-    container
-      400
-      500
-      midTop
-      (flow
-        down
-        [ item
-        , fromString "Use arrows to set the initial level\nand press enter to start the game" |> leftAligned
-        , show configuration.timestamp
-        ]
-      )
+    collage 400 500
+      [ container
+        300
+        500
+        topLeft
+        (flow
+          down
+          [ item
+          , fromString "Use arrows to set the initial level and\npress enter to start the game"
+              |> leftAligned
+              |> width 300
+              |> toForm
+              |> move ( 0, 0 )
+              |> (\x -> collage 300 50 [ x ])
+          ]
+        )
+        |> toForm
+      ]
 
+
+
+configItemBorderWidth: Float
+configItemBorderWidth = 3.0
 
 configItem : Bool -> String -> String -> Element
 configItem active title value =
@@ -97,10 +108,10 @@ configItem active title value =
       (lineStyle Color.black)
 
     borderStyle' =
-      { borderStyle | width = 3.0 }
+      { borderStyle | width = configItemBorderWidth }
 
     border =
-      outlined borderStyle' (rect 180 40)
+      outlined borderStyle' (rect (300 - 2 * configItemBorderWidth) (40 - 2 * configItemBorderWidth))
 
     rightArrow =
       filled Color.black (ngon 3 5)
@@ -108,12 +119,12 @@ configItem active title value =
     rightArrow' =
       collage 10 40 [ rightArrow ]
         |> toForm
-        |> move ( 80, -1 )
+        |> move ( 130, -1 )
 
     leftArrow =
       collage 10 40 [ (rotate (degrees 180) rightArrow) ]
         |> toForm
-        |> move ( 50, -1 )
+        |> move ( 100, -1 )
 
     arrows =
       if active then
@@ -121,26 +132,23 @@ configItem active title value =
       else
         []
   in
-    flow
-      right
-      [ collage
-          (180 + 6 + 2 * 20)
-          (40 + 6 + 2 * 20)
+    collage
+          300
+          40
           [ group
               ([ fromString (title ++ ":")
                   |> leftAligned
                   |> container 100 40 midLeft
                   |> toForm
-                  |> move ( -35, 0 )
+                  |> move ( -85, 0 )
                , value
                   |> fromString
                   |> centered
                   |> container 20 40 middle
                   |> toForm
-                  |> move ( 65, 0 )
+                  |> move ( 115, 0 )
                , border
                ]
                 ++ arrows
               )
           ]
-      ]
