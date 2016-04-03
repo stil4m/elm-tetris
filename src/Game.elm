@@ -38,11 +38,11 @@ initialSeed =
   43
 
 
-newGame : Int ->  Game
-newGame intitialLevel =
+newGame : Int -> Float -> Game
+newGame intitialLevel time =
   let
     ( bag, seed ) =
-      Random.generate Tetromino.bag (Random.initialSeed initialSeed)
+      Random.generate Tetromino.bag (Random.initialSeed (round time))
 
     falling =
       List.head bag |> Maybe.withDefault Tetromino.i

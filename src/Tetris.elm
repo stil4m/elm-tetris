@@ -19,9 +19,7 @@ type alias Tetris =
 
 defaultTetris : Tetris
 defaultTetris =
-  { game =
-      Nothing
-      --Just Game.defaultState
+  { game = Nothing
   , configuration = Configuration.initialConfiguration
   , windowSize = ( 0, 0 )
   }
@@ -53,7 +51,7 @@ update input tetris =
 
         newGame =
           if startGame then
-            Just (Game.newGame newConfig.level)
+            Just (Game.newGame newConfig.level newConfig.timestamp)
           else
             Nothing
       in

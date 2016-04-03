@@ -10,13 +10,15 @@ import Color
 type alias Configuration =
   { level : Int
   , activeElement : Int
+  , timestamp : Float
   }
 
 
 initialConfiguration : Configuration
 initialConfiguration =
-  { level = 15
+  { level = 0
   , activeElement = 0
+  , timestamp = 0
   }
 
 
@@ -39,6 +41,9 @@ update i configuration =
 
     Direction Right ->
       updateCurrentConfigurationItem configuration Right
+
+    Frame stamp _ ->
+      { configuration | timestamp = stamp }
 
     _ ->
       configuration
@@ -70,10 +75,13 @@ view configuration =
       400
       500
       midTop
-      (flow down [ item
-                , fromString "Use arrows to set the initial level\nand press enter to start the game" |> leftAligned
-                ])
-
+      (flow
+        down
+        [ item
+        , fromString "Use arrows to set the initial level\nand press enter to start the game" |> leftAligned
+        , show configuration.timestamp
+        ]
+      )
 
 
 configItem : Bool -> String -> String -> Element
@@ -94,19 +102,24 @@ configItem active title value =
     border =
       outlined borderStyle' (rect 180 40)
 
-    rightArrow = filled Color.black (ngon 3 5)
+    rightArrow =
+      filled Color.black (ngon 3 5)
+
     rightArrow' =
-      collage 10 40 [rightArrow]
-      |> toForm
-      |> move (80, -1)
+      collage 10 40 [ rightArrow ]
+        |> toForm
+        |> move ( 80, -1 )
 
     leftArrow =
-      collage 10 40 [(rotate (degrees 180) rightArrow)]
-      |> toForm
-      |> move (50, -1)
+      collage 10 40 [ (rotate (degrees 180) rightArrow) ]
+        |> toForm
+        |> move ( 50, -1 )
 
-
-    arrows = if active then [rightArrow', leftArrow] else []
+    arrows =
+      if active then
+        [ rightArrow', leftArrow ]
+      else
+        []
   in
     flow
       right
@@ -119,14 +132,15 @@ configItem active title value =
                   |> container 100 40 midLeft
                   |> toForm
                   |> move ( -35, 0 )
-              , value
+               , value
                   |> fromString
                   |> centered
                   |> container 20 40 middle
                   |> toForm
                   |> move ( 65, 0 )
-              , border
-              ]
-              ++ arrows)
+               , border
+               ]
+                ++ arrows
+              )
           ]
       ]
