@@ -19,7 +19,7 @@ inputToGameInput i =
       arrowsToGameInput d
     Key k ->
       keyToGameInput k
-    Frame f ->
+    Frame stamp f ->
       Tick f
     Enter ->
       NoOp

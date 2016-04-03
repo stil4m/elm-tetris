@@ -16,17 +16,17 @@ type Direction
 type Input
   = Direction Direction
   | Key KeyCode
-  | Frame Time
+  | Frame Time Time
   | Enter
 
 
-iff : a -> a -> (Bool -> a)
-iff x y = (\a -> if a then x else y)
 inputs : Signal Input
 inputs =
   let
     ticks =
-      Signal.map Frame (fps 30)
+      (fps 30)
+      |> Time.timestamp
+      |> Signal.map (\(x,y) -> Frame x y)
 
     keys =
       arrows
@@ -41,7 +41,8 @@ inputs =
 
     enters =
       Keyboard.enter
-      |> Signal.map (iff Enter (Frame 0))
+      |> Time.timestamp
+      |> Signal.map (\(x,y) -> if y then Enter else Frame x 0)
 
   in
     Signal.mergeMany [ ticks, keys, commands, enters]
