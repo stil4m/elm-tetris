@@ -11080,52 +11080,59 @@ Elm.Configuration.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $Text = Elm.Text.make(_elm);
    var _op = {};
+   var configItemBorderWidth = 3.0;
    var configItem = F3(function (active,title,value) {
       var rightArrow = A2($Graphics$Collage.filled,$Color.black,A2($Graphics$Collage.ngon,3,5));
       var rightArrow$ = A2($Graphics$Collage.move,
-      {ctor: "_Tuple2",_0: 80,_1: -1},
+      {ctor: "_Tuple2",_0: 130,_1: -1},
       $Graphics$Collage.toForm(A3($Graphics$Collage.collage,10,40,_U.list([rightArrow]))));
       var leftArrow = A2($Graphics$Collage.move,
-      {ctor: "_Tuple2",_0: 50,_1: -1},
+      {ctor: "_Tuple2",_0: 100,_1: -1},
       $Graphics$Collage.toForm(A3($Graphics$Collage.collage,10,40,_U.list([A2($Graphics$Collage.rotate,$Basics.degrees(180),rightArrow)]))));
       var arrows = active ? _U.list([rightArrow$,leftArrow]) : _U.list([]);
       var lineStyle = active ? $Graphics$Collage.solid : $Graphics$Collage.dotted;
       var borderStyle = lineStyle($Color.black);
-      var borderStyle$ = _U.update(borderStyle,{width: 3.0});
-      var border = A2($Graphics$Collage.outlined,borderStyle$,A2($Graphics$Collage.rect,180,40));
-      return A2($Graphics$Element.flow,
-      $Graphics$Element.right,
-      _U.list([A3($Graphics$Collage.collage,
-      180 + 6 + 2 * 20,
-      40 + 6 + 2 * 20,
+      var borderStyle$ = _U.update(borderStyle,{width: configItemBorderWidth});
+      var border = A2($Graphics$Collage.outlined,borderStyle$,A2($Graphics$Collage.rect,300 - 2 * configItemBorderWidth,40 - 2 * configItemBorderWidth));
+      return A3($Graphics$Collage.collage,
+      300,
+      40,
       _U.list([$Graphics$Collage.group(A2($Basics._op["++"],
       _U.list([A2($Graphics$Collage.move,
-              {ctor: "_Tuple2",_0: -35,_1: 0},
+              {ctor: "_Tuple2",_0: -85,_1: 0},
               $Graphics$Collage.toForm(A4($Graphics$Element.container,
               100,
               40,
               $Graphics$Element.midLeft,
               $Graphics$Element.leftAligned($Text.fromString(A2($Basics._op["++"],title,":"))))))
               ,A2($Graphics$Collage.move,
-              {ctor: "_Tuple2",_0: 65,_1: 0},
+              {ctor: "_Tuple2",_0: 115,_1: 0},
               $Graphics$Collage.toForm(A4($Graphics$Element.container,20,40,$Graphics$Element.middle,$Graphics$Element.centered($Text.fromString(value)))))
               ,border]),
-      arrows))]))]));
+      arrows))]));
    });
    var view = function (configuration) {
       var item = A3(configItem,_U.eq(configuration.activeElement,0),"Level",$Basics.toString(configuration.level));
       var _p0 = $Graphics$Element.sizeOf(item);
       var w = _p0._0;
       var h = _p0._1;
-      return A4($Graphics$Element.container,
+      return A3($Graphics$Collage.collage,
       400,
       500,
-      $Graphics$Element.midTop,
+      _U.list([$Graphics$Collage.toForm(A4($Graphics$Element.container,
+      300,
+      500,
+      $Graphics$Element.topLeft,
       A2($Graphics$Element.flow,
       $Graphics$Element.down,
       _U.list([item
-              ,$Graphics$Element.leftAligned($Text.fromString("Use arrows to set the initial level\nand press enter to start the game"))
-              ,$Graphics$Element.show(configuration.timestamp)])));
+              ,function (x) {
+                 return A3($Graphics$Collage.collage,300,50,_U.list([x]));
+              }(A2($Graphics$Collage.move,
+              {ctor: "_Tuple2",_0: 0,_1: 0},
+              $Graphics$Collage.toForm(A2($Graphics$Element.width,
+              300,
+              $Graphics$Element.leftAligned($Text.fromString("Use arrows to set the initial level and\npress enter to start the game"))))))]))))]));
    };
    var updateCurrentConfigurationItem = F2(function (configuration,dir) {
       var _p1 = {ctor: "_Tuple2",_0: dir,_1: configuration.activeElement};
@@ -11166,6 +11173,7 @@ Elm.Configuration.make = function (_elm) {
                                       ,update: update
                                       ,updateCurrentConfigurationItem: updateCurrentConfigurationItem
                                       ,view: view
+                                      ,configItemBorderWidth: configItemBorderWidth
                                       ,configItem: configItem};
 };Elm.GameController = Elm.GameController || {};
 Elm.GameController.make = function (_elm) {
