@@ -11022,9 +11022,8 @@ Elm.Controller.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $Time = Elm.Time.make(_elm);
    var _op = {};
-   var iff = F3(function (x,y,a) {    return a ? x : y;});
    var Enter = {ctor: "Enter"};
-   var Frame = function (a) {    return {ctor: "Frame",_0: a};};
+   var Frame = F2(function (a,b) {    return {ctor: "Frame",_0: a,_1: b};});
    var Key = function (a) {    return {ctor: "Key",_0: a};};
    var Direction = function (a) {    return {ctor: "Direction",_0: a};};
    var None = {ctor: "None"};
@@ -11045,10 +11044,10 @@ Elm.Controller.make = function (_elm) {
                                                                                                                                 ,_1: None};
    });
    var inputs = function () {
-      var enters = A2($Signal.map,A2(iff,Enter,Frame(0)),$Keyboard.enter);
+      var enters = A2($Signal.map,function (_p3) {    var _p4 = _p3;return _p4._1 ? Enter : A2(Frame,_p4._0,0);},$Time.timestamp($Keyboard.enter));
       var commands = A2($Signal.map,Key,A3($Signal.filter,function (x) {    return !_U.eq(x,13);},0,$Keyboard.presses));
       var keys = A2($Signal.map,Direction,A2($Signal.map,$Basics.snd,A3($Signal.foldp,realArrows,{ctor: "_Tuple2",_0: {x: 0,y: 0},_1: None},$Keyboard.arrows)));
-      var ticks = A2($Signal.map,Frame,$Time.fps(30));
+      var ticks = A2($Signal.map,function (_p5) {    var _p6 = _p5;return A2(Frame,_p6._0,_p6._1);},$Time.timestamp($Time.fps(30)));
       return $Signal.mergeMany(_U.list([ticks,keys,commands,enters]));
    }();
    return _elm.Controller.values = {_op: _op
@@ -11061,7 +11060,6 @@ Elm.Controller.make = function (_elm) {
                                    ,Key: Key
                                    ,Frame: Frame
                                    ,Enter: Enter
-                                   ,iff: iff
                                    ,inputs: inputs
                                    ,realArrows: realArrows};
 };Elm.Configuration = Elm.Configuration || {};
@@ -11125,7 +11123,9 @@ Elm.Configuration.make = function (_elm) {
       $Graphics$Element.midTop,
       A2($Graphics$Element.flow,
       $Graphics$Element.down,
-      _U.list([item,$Graphics$Element.leftAligned($Text.fromString("Use arrows to set the initial level\nand press enter to start the game"))])));
+      _U.list([item
+              ,$Graphics$Element.leftAligned($Text.fromString("Use arrows to set the initial level\nand press enter to start the game"))
+              ,$Graphics$Element.show(configuration.timestamp)])));
    };
    var updateCurrentConfigurationItem = F2(function (configuration,dir) {
       var _p1 = {ctor: "_Tuple2",_0: dir,_1: configuration.activeElement};
@@ -11144,22 +11144,21 @@ Elm.Configuration.make = function (_elm) {
    var configElements = 1;
    var update = F2(function (i,configuration) {
       var _p2 = i;
-      _v1_4: do {
-         if (_p2.ctor === "Direction") {
-               switch (_p2._0.ctor)
-               {case "Down": return _U.update(configuration,{activeElement: A2($Basics.min,configElements - 1,configuration.activeElement + 1)});
-                  case "Up": return _U.update(configuration,{activeElement: A2($Basics.max,0,configuration.activeElement - 1)});
-                  case "Left": return A2(updateCurrentConfigurationItem,configuration,$Controller.Left);
-                  case "Right": return A2(updateCurrentConfigurationItem,configuration,$Controller.Right);
-                  default: break _v1_4;}
-            } else {
-               break _v1_4;
-            }
+      _v1_5: do {
+         switch (_p2.ctor)
+         {case "Direction": switch (_p2._0.ctor)
+              {case "Down": return _U.update(configuration,{activeElement: A2($Basics.min,configElements - 1,configuration.activeElement + 1)});
+                 case "Up": return _U.update(configuration,{activeElement: A2($Basics.max,0,configuration.activeElement - 1)});
+                 case "Left": return A2(updateCurrentConfigurationItem,configuration,$Controller.Left);
+                 case "Right": return A2(updateCurrentConfigurationItem,configuration,$Controller.Right);
+                 default: break _v1_5;}
+            case "Frame": return _U.update(configuration,{timestamp: _p2._0});
+            default: break _v1_5;}
       } while (false);
       return configuration;
    });
-   var initialConfiguration = {level: 15,activeElement: 0};
-   var Configuration = F2(function (a,b) {    return {level: a,activeElement: b};});
+   var initialConfiguration = {level: 0,activeElement: 0,timestamp: 0};
+   var Configuration = F3(function (a,b,c) {    return {level: a,activeElement: b,timestamp: c};});
    return _elm.Configuration.values = {_op: _op
                                       ,Configuration: Configuration
                                       ,initialConfiguration: initialConfiguration
@@ -11208,7 +11207,7 @@ Elm.GameController.make = function (_elm) {
       switch (_p1.ctor)
       {case "Direction": return arrowsToGameInput(_p1._0);
          case "Key": return keyToGameInput(_p1._0);
-         case "Frame": return Tick(_p1._0);
+         case "Frame": return Tick(_p1._1);
          default: return NoOp;}
    };
    return _elm.GameController.values = {_op: _op
@@ -11411,10 +11410,10 @@ Elm.Game.make = function (_elm) {
    };
    var initialSeed = 43;
    var startingShift = {ctor: "_Tuple2",_0: 20,_1: 5};
-   var newGame = function (intitialLevel) {
+   var newGame = F2(function (intitialLevel,time) {
       var score = $ScoreBoard.newScore(intitialLevel);
       var shift = asShiftDelay(score.level);
-      var _p3 = A2($Random.generate,$Tetromino.bag,$Random.initialSeed(initialSeed));
+      var _p3 = A2($Random.generate,$Tetromino.bag,$Random.initialSeed($Basics.round(time)));
       var bag = _p3._0;
       var seed = _p3._1;
       var falling = A2($Maybe.withDefault,$Tetromino.i,$List.head(bag));
@@ -11431,7 +11430,7 @@ Elm.Game.make = function (_elm) {
              ,pieceNumber: 1
              ,showNext: true
              ,paused: false};
-   };
+   });
    var nextTetromino = function (state) {
       var _p4 = $Board.clearLines(A2($Board.addTetromino,state.falling,state.board));
       var lines = _p4._0;
@@ -11578,7 +11577,7 @@ Elm.Tetris.make = function (_elm) {
          } else {
             var startGame = _U.eq(input,$Controller.Enter);
             var newConfig = A2($Configuration.update,input,tetris.configuration);
-            var newGame = startGame ? $Maybe.Just($Game.newGame(newConfig.level)) : $Maybe.Nothing;
+            var newGame = startGame ? $Maybe.Just(A2($Game.newGame,newConfig.level,newConfig.timestamp)) : $Maybe.Nothing;
             return _U.update(tetris,{configuration: newConfig,game: newGame});
          }
    });
