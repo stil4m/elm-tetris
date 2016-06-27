@@ -1,62 +1,66 @@
-module Controller (..) where
+module Controller exposing (..)
 
-import Keyboard exposing (arrows, presses)
-import Signal exposing (Signal)
-import Time exposing (Time, fps)
-import Char exposing (KeyCode, toCode)
+import Keyboard exposing (presses, KeyCode)
+import Time exposing (Time)
+
 
 type Direction
-  = Up
-  | Down
-  | Right
-  | Left
-  | None
+    = Up
+    | Down
+    | Right
+    | Left
+    | None
 
 
 type Input
-  = Direction Direction
-  | Key KeyCode
-  | Frame Time Time
-  | Enter
+    = Direction Direction
+    | Key KeyCode
+    | Frame Time Time
+    | Enter
 
 
-inputs : Signal Input
-inputs =
-  let
-    ticks =
-      (fps 30)
-      |> Time.timestamp
-      |> Signal.map (\(x,y) -> Frame x y)
-
-    keys =
-      arrows
-        |> Signal.foldp realArrows ( { x = 0, y = 0 }, None )
-        |> Signal.map snd
-        |> Signal.map Direction
-
-    commands =
-      presses
-        |> Signal.filter (\x -> x /= 13) 0
-        |> Signal.map Key
-
-    enters =
-      Keyboard.enter
-      |> Time.timestamp
-      |> Signal.map (\(x,y) -> if y then Enter else Frame x 0)
-
-  in
-    Signal.mergeMany [ ticks, keys, commands, enters]
+type alias Model =
+    Maybe Time
 
 
-realArrows : { x : Int, y : Int } -> ( { x : Int, y : Int }, Direction ) -> ( { x : Int, y : Int }, Direction )
-realArrows newArrows ( oldArrows, oldDirection ) =
-  if newArrows.x == -1 && oldArrows.x /= -1 then
-    ( newArrows, Left )
-  else if newArrows.x == 1 && oldArrows.x /= 1 then
-    ( newArrows, Right )
-  else if newArrows.y == 1 && oldArrows.y /= 1 then
-    ( newArrows, Up )
-  else if newArrows.y == -1 && oldArrows.y /= -1 then
-    ( newArrows, Down )
-  else
-    ( newArrows, None )
+type Msg
+    = PressDown KeyCode
+    | Tick Time
+
+
+update : Msg -> Model -> ( Model, Input )
+update msg model =
+    case msg of
+        PressDown k ->
+            if (k == 37) then
+                ( model, Direction Left )
+            else if (k == 38) then
+                ( model, Direction Up )
+            else if (k == 39) then
+                ( model, Direction Right )
+            else if (k == 40) then
+                ( model, Direction Down )
+            else if (k == 13) then
+                ( model, Enter )
+            else
+                ( model, Key k )
+
+        Tick t ->
+            case model of
+                Just old ->
+                    let
+                        interval =
+                            t - old
+                    in
+                        ( Just t, Frame t interval )
+
+                Nothing ->
+                    ( Just t, Frame t 0 )
+
+
+subscriptions : Sub Msg
+subscriptions =
+    Sub.batch
+        [ Keyboard.downs PressDown
+        , Time.every (1000.0 / 33) Tick
+        ]
