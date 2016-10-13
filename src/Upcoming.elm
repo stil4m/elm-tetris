@@ -19,15 +19,15 @@ toElement showNext tetromino width =
         border =
             (solid Color.black)
 
-        border' =
+        border_ =
             { border | width = 3.0, cap = Round }
 
         forms =
             [ filled Color.white box
-            , outlined border' box
+            , outlined border_ box
             ]
 
-        forms' =
+        forms_ =
             if showNext then
                 forms
                     ++ [ move ( -tetromino.pivot.c * Block.size, -tetromino.pivot.r * Block.size )
@@ -37,4 +37,4 @@ toElement showNext tetromino width =
             else
                 forms
     in
-        collage width width forms'
+        collage width width forms_

@@ -88,11 +88,11 @@ boxWithText w label value =
         lineStyle =
             (solid Color.black)
 
-        lineStyle' =
+        lineStyle_ =
             { lineStyle | width = 3.0, cap = Round }
 
         border =
-            outlined lineStyle' boxShape
+            outlined lineStyle_ boxShape
     in
         collage w
             50

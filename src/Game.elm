@@ -47,7 +47,7 @@ newGame intitialLevel time =
         falling =
             List.head bag |> Maybe.withDefault Tetromino.i
 
-        bag' =
+        bag_ =
             List.drop 1 bag
 
         score =
@@ -59,7 +59,7 @@ newGame intitialLevel time =
         { falling = Tetromino.shift startingShift falling
         , seed = seed
         , gameOver = False
-        , bag = bag'
+        , bag = bag_
         , board = Board.new []
         , time = 0
         , score = score
@@ -167,16 +167,16 @@ checkTick state =
             isValid =
                 Board.isValid shifted state.board
 
-            state' =
+            state_ =
                 if isValid then
                     { state | falling = shifted }
                 else
                     nextTetromino state
 
             newShiftDelay =
-                asShiftDelay state'.score.level
+                asShiftDelay state_.score.level
         in
-            { state'
+            { state_
                 | nextShift = nextShift
                 , shiftDelay = newShiftDelay
             }
@@ -214,7 +214,7 @@ wallKick current nextState =
             nextState.falling.cols // 2
 
         shifts =
-            [1..range] |> List.concatMap (\n -> [ ( 0, n ), ( 0, -1 ) ])
+            List.range 1 range |> List.concatMap (\n -> [ ( 0, n ), ( 0, -1 ) ])
     in
         tryKicks shifts current nextState
 
@@ -226,7 +226,7 @@ floorKick current nextState =
             nextState.falling.rows // 2
 
         shifts =
-            [1..range] |> List.map (\n -> ( n, 0 ))
+            List.range 1 range |> List.map (\n -> ( n, 0 ))
     in
         tryKicks shifts current nextState
 
@@ -259,7 +259,7 @@ updatePausedGame input state =
 updateActiveGame : GameInput -> Game -> Game
 updateActiveGame input state =
     let
-        useIfValid' =
+        useIfValid_ =
             useIfValid state
     in
         case input of
@@ -277,24 +277,24 @@ updateActiveGame input state =
                         }
 
                     nextState =
-                        useIfValid' rotated
+                        useIfValid_ rotated
 
-                    nextState' =
+                    nextState_ =
                         if nextState == state then
                             wallKick state rotated
                         else
                             nextState
 
-                    nextState'' =
-                        if nextState' == state then
+                    nextState__ =
+                        if nextState_ == state then
                             floorKick state rotated
                         else
-                            nextState'
+                            nextState_
                 in
-                    nextState''
+                    nextState__
 
             Shift amount ->
-                useIfValid'
+                useIfValid_
                     { state
                         | falling = Tetromino.shift amount state.falling
                     }

@@ -164,15 +164,15 @@ clearRow row board =
 clearLines : Board -> ( Int, Board )
 clearLines =
     let
-        clearLines' row lines board =
+        clearLines_ row lines board =
             if (row >= rows) then
                 ( lines, board )
             else if (checkRow row board) then
-                clearLines' row (lines + 1) (clearRow row board)
+                clearLines_ row (lines + 1) (clearRow row board)
             else
-                clearLines' (row + 1) lines board
+                clearLines_ (row + 1) lines board
     in
-        clearLines' 0 0
+        clearLines_ 0 0
 
 
 addTetromino : Tetromino -> Board -> Board

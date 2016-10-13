@@ -6,12 +6,11 @@ import Controller exposing (subscriptions)
 import GameController exposing (..)
 import Element exposing (Element, color, toHtml)
 import Color
-import Html exposing (Html, div, text)
+import Html exposing (Html, div, text, program)
 import Html.Attributes exposing (style)
-import Html.App exposing (program)
 
 
-main : Program Never
+main : Program Never Model Msg
 main =
     program
         { init = init
@@ -73,13 +72,13 @@ update msg model =
                             newGame =
                                 (Game.update (GameController.inputToGameInput input) game)
 
-                            newGame' =
+                            newGame_ =
                                 if newGame.gameOver && (input == Controller.Enter) then
                                     Nothing
                                 else
                                     Just newGame
                         in
-                            { tetris | game = newGame' } ! []
+                            { tetris | game = newGame_ } ! []
 
                     Nothing ->
                         let
@@ -98,20 +97,15 @@ update msg model =
                             { tetris | configuration = newConfig, game = newGame } ! []
 
 
-
--- view : Tetris -> Element
-
-
 view : Tetris -> Html Msg
 view tetris =
     let
         inner =
-            case tetris.game of
-                Just game ->
-                    Game.view game
-
-                Nothing ->
-                    Configuration.view tetris.configuration
+            tetris.game
+                |> Maybe.map Game.view
+                |> Maybe.withDefault (Configuration.view tetris.configuration)
+                |> color Color.white
+                |> toHtml
     in
         div
             [ style
@@ -131,5 +125,5 @@ view tetris =
                     , ( "display", "inline-block" )
                     ]
                 ]
-                [ toHtml (inner |> color Color.white) ]
+                [ inner ]
             ]

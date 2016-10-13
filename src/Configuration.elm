@@ -106,16 +106,16 @@ configItem active title value =
         borderStyle =
             (lineStyle Color.black)
 
-        borderStyle' =
+        borderStyle_ =
             { borderStyle | width = configItemBorderWidth }
 
         border =
-            outlined borderStyle' (rect (300 - 2 * configItemBorderWidth) (40 - 2 * configItemBorderWidth))
+            outlined borderStyle_ (rect (300 - 2 * configItemBorderWidth) (40 - 2 * configItemBorderWidth))
 
         rightArrow =
             filled Color.black (ngon 3 5)
 
-        rightArrow' =
+        rightArrow_ =
             collage 10 40 [ rightArrow ]
                 |> toForm
                 |> move ( 130, -1 )
@@ -127,7 +127,7 @@ configItem active title value =
 
         arrows =
             if active then
-                [ rightArrow', leftArrow ]
+                [ rightArrow_, leftArrow ]
             else
                 []
     in
