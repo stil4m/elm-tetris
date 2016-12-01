@@ -30,9 +30,9 @@ toElement showNext tetromino width =
         forms_ =
             if showNext then
                 forms
-                    ++ [ move ( -tetromino.pivot.c * Block.size, -tetromino.pivot.r * Block.size )
-                            <| Tetromino.toForm
-                            <| tetromino
+                    ++ [ move ( -tetromino.pivot.c * Block.size, -tetromino.pivot.r * Block.size ) <|
+                            Tetromino.toForm <|
+                                tetromino
                        ]
             else
                 forms

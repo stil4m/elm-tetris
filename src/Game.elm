@@ -96,8 +96,8 @@ view state =
     in
         flow right
             [ collage boardWidth boardHeight [ boardForm ]
-            , container sideBarWidth boardHeight midBottom
-                <| flow up
+            , container sideBarWidth boardHeight midBottom <|
+                flow up
                     [ Upcoming.toElement (not state.paused && state.showNext) next sideBarWidth
                     , ScoreBoard.view state.score sideBarWidth
                     ]
