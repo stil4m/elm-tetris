@@ -193,9 +193,9 @@ shuffleBag weights =
             List.map2 (,) weights tetrominoes
 
         sorted =
-            List.sortBy fst weighted
+            List.sortBy Tuple.first weighted
     in
-        List.map snd sorted
+        List.map Tuple.second sorted
 
 
 bag : Generator (List Tetromino)
